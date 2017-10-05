@@ -1,6 +1,8 @@
 ---
 title: "Initial NARTs analysis"
-output: html_notebook
+output:
+  html_document: default
+  html_notebook: default
 ---
 
 NARTS are a DfE (and previously BIS) thing.
