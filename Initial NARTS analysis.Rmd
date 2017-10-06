@@ -73,9 +73,39 @@ ggplot(et2013_6_short, aes(x=`Hybrid End Year`, y=`Overall Cohort`, fill=as.fact
 
 I've ignored Schools and sixth form colleges, as their 19+ provision is minimal.
 
+I could either add facets for type of institution (relatively easily) but that could elad to an unwieldy graphic, or use purrr map() to create one chart for each institution type. The benefit of the latter approach is that I could extend it to geographies/ethnicities etc. I'll try that for Apprenticeships...
+
 However, it appears that Education and Training excludes Apprenticeships (even when these are delivered by Colleges or other E&T institutions) as well as workplace learning and community learning, all of which are within the Further Education SFR populations. There are NARTS for Apprenticeships, so we can add up Apprenticeship and E&T populations, but not for Workplace Learning or Community Learning.
 
 It's likely that part of the story is 19+ provision increasingly being classified as apprenticeship - we know about this for Workplace Learning, where Apprenticeships replaced Train to Gain, leaving very little.
+
+## Apprenticeships
+
+The Headline Apprenticeships file for 2014-5 includes data for 2012-3, 2013-4 and 2014-5. Which means I just have to load two files (the 2014-5 and the 2015-6) to get a 4-year time series.
+
+For Apprenticeships, the age-groups are different, with the 19+ group in E&T split out into 19-23 and 24+, and there are (obviously) no figures for Level 1. We have Level 2, 3 and 4+ aka Intermediate, Advanced, Higher.
+
+```{r read_apps_NARTS}
+app2012_5 <- read_csv("./NART201_201415_NationalAchievementRateTables_Apprenticeship_Overall_Headline/NART201_201415_NationalAchievementRateTables_Apprenticeship_Overall_Headline.csv", na="-")
+app2015_6 <- read_csv("./201516_App_NARTs_Overall/NART201_201516_App_Overall_Headline.csv", na="-")
+names(app2012_5) <- names(app2015_6)
+app2012_6 <- bind_rows(app2012_5, app2015_6)
+```
+
+Adding the 'na="-"' to the read command sorts the numbers of participants being counted as numbers rather than character - haven't yet seen any extraneous big.marks.We have 31 NAs in the participants column, which matches the hyphens in the source data - these are rows for Higher Apprenticeships with no recorded participants.
+
+
+```{r chart_apps}
+app2012_6 %>% 
+  filter(Age %in% c("19-23", "24+"), `Apprenticeship Level` %in% c(2,3)) %>%       select(`Institution Type`,`Hybrid End Year`, `Apprenticeship Level`, `Overall Cohort`) %>% 
+  group_by(`Institution Type`, `Hybrid End Year`, `Apprenticeship Level`) %>%
+  summarise(Participation = sum(`Overall Cohort`)) -> app2012_6_short
+  
+
+```
+
+
+## Participation rates
 
 Let's find some decent denominators for participation v need. Using Annual Population Survey data on NOMIS, I can find numbers for the population *with* different qualification levels in various age-groups. Therefore, I can find the numbers in those age-groups *without* those qualifications. I can add up the age-groups to give me population numbers 20-64 with and without specific qualification levels.
 
